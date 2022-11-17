@@ -1,2 +1,2 @@
-# Example
-An example greeter plugin
+# Keybind Movement
+Move around using keybinds
