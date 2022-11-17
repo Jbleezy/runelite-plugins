@@ -1,4 +1,4 @@
-package com.example;
+package com.keybindmove;
 
 import com.google.inject.Provides;
 import javax.inject.Inject;
@@ -14,40 +14,38 @@ import net.runelite.client.plugins.PluginDescriptor;
 
 @Slf4j
 @PluginDescriptor(
-	name = "Example"
+	name = "Keybind Movement",
+	description = "Move around using keybinds"
 )
-public class ExamplePlugin extends Plugin
+public class KeybindMovePlugin extends Plugin
 {
 	@Inject
 	private Client client;
 
 	@Inject
-	private ExampleConfig config;
+	private KeybindMoveConfig config;
 
 	@Override
 	protected void startUp() throws Exception
 	{
-		log.info("Example started!");
+
 	}
 
 	@Override
 	protected void shutDown() throws Exception
 	{
-		log.info("Example stopped!");
+
 	}
 
 	@Subscribe
 	public void onGameStateChanged(GameStateChanged gameStateChanged)
 	{
-		if (gameStateChanged.getGameState() == GameState.LOGGED_IN)
-		{
-			client.addChatMessage(ChatMessageType.GAMEMESSAGE, "", "Example says " + config.greeting(), null);
-		}
+
 	}
 
 	@Provides
-	ExampleConfig provideConfig(ConfigManager configManager)
+    KeybindMoveConfig provideConfig(ConfigManager configManager)
 	{
-		return configManager.getConfig(ExampleConfig.class);
+		return configManager.getConfig(KeybindMoveConfig.class);
 	}
 }
