@@ -1,4 +1,4 @@
-package com.example;
+package com.dynamicentityhider;
 
 import com.google.inject.Provides;
 import javax.inject.Inject;
@@ -14,40 +14,38 @@ import net.runelite.client.plugins.PluginDescriptor;
 
 @Slf4j
 @PluginDescriptor(
-	name = "Example"
+		name = "Dynamic Entity Hider",
+		description = "Hides entities when there are too many showing"
 )
-public class ExamplePlugin extends Plugin
+public class DynamicEntityHiderPlugin extends Plugin
 {
 	@Inject
 	private Client client;
 
 	@Inject
-	private ExampleConfig config;
+	private DynamicEntityHiderConfig config;
 
 	@Override
 	protected void startUp() throws Exception
 	{
-		log.info("Example started!");
+
 	}
 
 	@Override
 	protected void shutDown() throws Exception
 	{
-		log.info("Example stopped!");
+
 	}
 
 	@Subscribe
 	public void onGameStateChanged(GameStateChanged gameStateChanged)
 	{
-		if (gameStateChanged.getGameState() == GameState.LOGGED_IN)
-		{
-			client.addChatMessage(ChatMessageType.GAMEMESSAGE, "", "Example says " + config.greeting(), null);
-		}
+
 	}
 
 	@Provides
-	ExampleConfig provideConfig(ConfigManager configManager)
+	DynamicEntityHiderConfig provideConfig(ConfigManager configManager)
 	{
-		return configManager.getConfig(ExampleConfig.class);
+		return configManager.getConfig(DynamicEntityHiderConfig.class);
 	}
 }
