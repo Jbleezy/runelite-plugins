@@ -1,5 +1,6 @@
 package com.dynamicentityhider;
 
+import com.dynamicentityhider.config.Mode;
 import net.runelite.client.config.Config;
 import net.runelite.client.config.ConfigGroup;
 import net.runelite.client.config.ConfigItem;
@@ -22,5 +23,15 @@ public interface DynamicEntityHiderConfig extends Config
 	default int maxPlayersShown()
 	{
 		return 100;
+	}
+
+	@ConfigItem(
+			keyName = "mode",
+			name = "Mode",
+			description = "Mode to hide players: default (by PID) or by distance"
+	)
+	default Mode mode()
+	{
+		return Mode.DEFAULT;
 	}
 }

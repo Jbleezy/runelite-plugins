@@ -1,5 +1,6 @@
 package com.dynamicentityhider;
 
+import com.dynamicentityhider.config.Mode;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Provides;
 import javax.inject.Inject;
@@ -15,6 +16,7 @@ import net.runelite.client.events.ConfigChanged;
 import net.runelite.client.plugins.Plugin;
 import net.runelite.client.plugins.PluginDescriptor;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 
 @Slf4j
@@ -34,6 +36,7 @@ public class DynamicEntityHiderPlugin extends Plugin
 	private Hooks hooks;
 
 	private int maxPlayersShown;
+	private Mode mode;
 	private long prevTime = System.currentTimeMillis();
 	private List<Player> playersToShow = new ArrayList<>();
 
@@ -71,6 +74,7 @@ public class DynamicEntityHiderPlugin extends Plugin
 	private void updateConfig()
 	{
 		maxPlayersShown = config.maxPlayersShown();
+		mode = config.mode();
 	}
 
 	@VisibleForTesting
@@ -81,22 +85,17 @@ public class DynamicEntityHiderPlugin extends Plugin
 		if (prevTime != System.currentTimeMillis())
 		{
 			prevTime = System.currentTimeMillis();
-			playersToShow.clear();
 
-			for (Player otherPlayer : client.getPlayers())
+			playersToShow = client.getPlayers();
+
+			playersToShow.remove(local);
+
+			if (mode.equals(Mode.DISTANCE))
 			{
-				if (otherPlayer == local)
-				{
-					continue;
-				}
-
-				playersToShow.add(otherPlayer);
-
-				if (playersToShow.size() >= maxPlayersShown)
-				{
-					break;
-				}
+				playersToShow.sort(new SortByDistance());
 			}
+
+			playersToShow = playersToShow.subList(0, maxPlayersShown);
 		}
 
 		if (renderable instanceof Player)
@@ -112,12 +111,20 @@ public class DynamicEntityHiderPlugin extends Plugin
 		{
 			NPC npc = (NPC) renderable;
 
-			if (npc.getComposition().isFollower() && npc != client.getFollower() && npc.getInteracting() != null)
+			if (npc.getComposition().isFollower() && npc != client.getFollower())
 			{
 				return playersToShow.contains(npc.getInteracting());
 			}
 		}
 
 		return true;
+	}
+
+	class SortByDistance implements Comparator<Player>
+	{
+		public int compare(Player a, Player b)
+		{
+			return client.getLocalPlayer().getLocalLocation().distanceTo(a.getLocalLocation()) - client.getLocalPlayer().getLocalLocation().distanceTo(b.getLocalLocation());
+		}
 	}
 }
