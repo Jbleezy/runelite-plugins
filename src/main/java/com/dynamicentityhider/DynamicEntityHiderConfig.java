@@ -5,19 +5,21 @@ import net.runelite.client.config.ConfigGroup;
 import net.runelite.client.config.ConfigItem;
 import net.runelite.client.config.Range;
 
-@ConfigGroup("example")
+@ConfigGroup(DynamicEntityHiderConfig.GROUP)
 public interface DynamicEntityHiderConfig extends Config
 {
+	String GROUP = "dynamicentityhider";
+
 	@Range(
 			min = 1,
 			max = 2000
 	)
 	@ConfigItem(
-			keyName = "showOthersAmount",
-			name = "Show Others Amount",
+			keyName = "maxPlayersShown",
+			name = "Max Players Shown",
 			description = "Maximum amount of other players to show"
 	)
-	default int showOthersAmount()
+	default int maxPlayersShown()
 	{
 		return 100;
 	}

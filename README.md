@@ -1,2 +1,2 @@
 # Dynamic Entity Hider
-Hides entities when there are too many showing
+Hides players when there are too many showing
