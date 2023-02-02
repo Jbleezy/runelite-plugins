@@ -1,2 +1,2 @@
-# Example
-An example greeter plugin
+# Jbleezy's RuneLite Plugins
+View branches to see specific plugins
