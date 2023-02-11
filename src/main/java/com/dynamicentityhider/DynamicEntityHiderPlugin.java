@@ -5,10 +5,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Provides;
 import javax.inject.Inject;
 import lombok.extern.slf4j.Slf4j;
-import net.runelite.api.Client;
-import net.runelite.api.NPC;
-import net.runelite.api.Player;
-import net.runelite.api.Renderable;
+import net.runelite.api.*;
 import net.runelite.client.callback.Hooks;
 import net.runelite.client.config.ConfigManager;
 import net.runelite.client.eventbus.Subscribe;
@@ -36,8 +33,6 @@ public class DynamicEntityHiderPlugin extends Plugin
 	@Inject
 	private Hooks hooks;
 
-	private int maxPlayersShown;
-	private Mode mode;
 	private long prevTime = System.currentTimeMillis();
 	private List<Player> playersToShow = new ArrayList<>();
 	private List<Player> prevPlayersToShow = new ArrayList<>();
@@ -53,8 +48,6 @@ public class DynamicEntityHiderPlugin extends Plugin
 	@Override
 	protected void startUp()
 	{
-		updateConfig();
-
 		playersToShow = new ArrayList<>(); // re-randomize players
 
 		hooks.registerRenderableDrawListener(drawListener);
@@ -71,19 +64,11 @@ public class DynamicEntityHiderPlugin extends Plugin
 	{
 		if (e.getGroup().equals(DynamicEntityHiderConfig.GROUP))
 		{
-			updateConfig();
-
 			if (e.getNewValue().equals(Mode.RANDOM.toString()))
 			{
 				playersToShow = new ArrayList<>(); // re-randomize players
 			}
 		}
-	}
-
-	private void updateConfig()
-	{
-		maxPlayersShown = config.maxPlayersShown();
-		mode = config.mode();
 	}
 
 	@VisibleForTesting
@@ -99,11 +84,11 @@ public class DynamicEntityHiderPlugin extends Plugin
 			playersToShow = client.getPlayers();
 			playersToShow.remove(local);
 
-			if (mode.equals(Mode.DISTANCE))
+			if (config.mode().equals(Mode.DISTANCE))
 			{
 				playersToShow.sort(new SortByDistance());
 			}
-			else if (mode.equals(Mode.RANDOM))
+			else if (config.mode().equals(Mode.RANDOM))
 			{
 				List<Player> retainPlayersToShow = new ArrayList<>(playersToShow);
 				retainPlayersToShow.retainAll(prevPlayersToShow);
@@ -116,9 +101,9 @@ public class DynamicEntityHiderPlugin extends Plugin
 				playersToShow.addAll(newPlayersToShow);
 			}
 
-			if (maxPlayersShown < playersToShow.size())
+			if (config.maxPlayersShown() < playersToShow.size())
 			{
-				playersToShow = playersToShow.subList(0, maxPlayersShown);
+				playersToShow = playersToShow.subList(0, config.maxPlayersShown());
 			}
 		}
 
