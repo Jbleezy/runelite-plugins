@@ -12,7 +12,7 @@ public interface DynamicEntityHiderConfig extends Config
 	String GROUP = "dynamicentityhider";
 
 	@Range(
-			min = 1,
+			min = 0,
 			max = 2000
 	)
 	@ConfigItem(
