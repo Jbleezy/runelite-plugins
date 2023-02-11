@@ -16,6 +16,7 @@ import net.runelite.client.events.ConfigChanged;
 import net.runelite.client.plugins.Plugin;
 import net.runelite.client.plugins.PluginDescriptor;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
@@ -39,6 +40,7 @@ public class DynamicEntityHiderPlugin extends Plugin
 	private Mode mode;
 	private long prevTime = System.currentTimeMillis();
 	private List<Player> playersToShow = new ArrayList<>();
+	private List<Player> prevPlayersToShow = new ArrayList<>();
 
 	private final Hooks.RenderableDrawListener drawListener = this::shouldDraw;
 
@@ -52,6 +54,8 @@ public class DynamicEntityHiderPlugin extends Plugin
 	protected void startUp()
 	{
 		updateConfig();
+
+		playersToShow = new ArrayList<>(); // re-randomize players
 
 		hooks.registerRenderableDrawListener(drawListener);
 	}
@@ -68,6 +72,11 @@ public class DynamicEntityHiderPlugin extends Plugin
 		if (e.getGroup().equals(DynamicEntityHiderConfig.GROUP))
 		{
 			updateConfig();
+
+			if (e.getNewValue().equals(Mode.RANDOM.toString()))
+			{
+				playersToShow = new ArrayList<>(); // re-randomize players
+			}
 		}
 	}
 
@@ -85,14 +94,26 @@ public class DynamicEntityHiderPlugin extends Plugin
 		if (prevTime != System.currentTimeMillis())
 		{
 			prevTime = System.currentTimeMillis();
+			prevPlayersToShow = new ArrayList<>(playersToShow);
 
 			playersToShow = client.getPlayers();
-
 			playersToShow.remove(local);
 
 			if (mode.equals(Mode.DISTANCE))
 			{
 				playersToShow.sort(new SortByDistance());
+			}
+			else if (mode.equals(Mode.RANDOM))
+			{
+				List<Player> retainPlayersToShow = new ArrayList<>(playersToShow);
+				retainPlayersToShow.retainAll(prevPlayersToShow);
+
+				List<Player> newPlayersToShow = new ArrayList<>(playersToShow);
+				newPlayersToShow.removeAll(retainPlayersToShow);
+				Collections.shuffle(newPlayersToShow);
+
+				playersToShow = new ArrayList<>(retainPlayersToShow);
+				playersToShow.addAll(newPlayersToShow);
 			}
 
 			playersToShow = playersToShow.subList(0, maxPlayersShown);
