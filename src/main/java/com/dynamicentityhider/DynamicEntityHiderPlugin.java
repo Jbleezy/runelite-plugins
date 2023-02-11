@@ -74,6 +74,13 @@ public class DynamicEntityHiderPlugin extends Plugin
 	@VisibleForTesting
 	boolean shouldDraw(Renderable renderable, boolean drawingUI)
 	{
+		boolean playerInWilderness = client.getVarbitValue(Varbits.IN_WILDERNESS) == 1;
+
+		if (config.disableInWilderness() && playerInWilderness)
+		{
+			return true;
+		}
+
 		Player local = client.getLocalPlayer();
 
 		if (prevTime != System.currentTimeMillis())

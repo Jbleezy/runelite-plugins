@@ -16,6 +16,7 @@ public interface DynamicEntityHiderConfig extends Config
 			max = 2000
 	)
 	@ConfigItem(
+			position = 1,
 			keyName = "maxPlayersShown",
 			name = "Max Players Shown",
 			description = "Maximum amount of other players to show"
@@ -26,6 +27,7 @@ public interface DynamicEntityHiderConfig extends Config
 	}
 
 	@ConfigItem(
+			position = 2,
 			keyName = "mode",
 			name = "Mode",
 			description = "Determines how to hide other players"
@@ -34,4 +36,12 @@ public interface DynamicEntityHiderConfig extends Config
 	{
 		return Mode.DISTANCE;
 	}
+
+	@ConfigItem(
+			position = 3,
+			keyName = "disableInWilderness",
+			name = "Disable In Wilderness",
+			description = "Disables hiding other players in the Wilderness"
+	)
+	default boolean disableInWilderness() { return false; }
 }
