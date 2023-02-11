@@ -28,10 +28,10 @@ public interface DynamicEntityHiderConfig extends Config
 	@ConfigItem(
 			keyName = "mode",
 			name = "Mode",
-			description = "Mode to hide players: default (by PID) or by distance"
+			description = "Determines how to hide other players"
 	)
 	default Mode mode()
 	{
-		return Mode.DEFAULT;
+		return Mode.DISTANCE;
 	}
 }

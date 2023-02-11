@@ -1,7 +1,12 @@
 package com.dynamicentityhider.config;
 
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
+
+@Getter
+@RequiredArgsConstructor
 public enum Mode
 {
-    DEFAULT,
-    DISTANCE
+    DISTANCE,
+    RANDOM
 }
