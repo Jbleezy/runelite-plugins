@@ -116,7 +116,10 @@ public class DynamicEntityHiderPlugin extends Plugin
 				playersToShow.addAll(newPlayersToShow);
 			}
 
-			playersToShow = playersToShow.subList(0, maxPlayersShown);
+			if (maxPlayersShown < playersToShow.size())
+			{
+				playersToShow = playersToShow.subList(0, maxPlayersShown);
+			}
 		}
 
 		if (renderable instanceof Player)
