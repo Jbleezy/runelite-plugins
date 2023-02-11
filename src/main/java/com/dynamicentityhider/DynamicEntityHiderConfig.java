@@ -34,7 +34,7 @@ public interface DynamicEntityHiderConfig extends Config
 	)
 	default Mode mode()
 	{
-		return Mode.DISTANCE;
+		return Mode.RANDOM;
 	}
 
 	@ConfigItem(
