@@ -60,15 +60,13 @@ public class MouseoverTextDisablerPlugin extends Plugin
 	@Subscribe
 	public void onGameStateChanged(GameStateChanged gameStateChanged)
 	{
-		if (gameStateChanged.getGameState() != GameState.LOGGED_IN)
-		{
-			if (mouseoverTextDisabled) {
-				mouseoverTextDisabled = false;
-			}
+		if (gameStateChanged.getGameState() == GameState.LOGIN_SCREEN) {
+			mouseoverTextDisabled = false;
+			loginClickToPlayPassed = false;
 		}
 
-		if (gameStateChanged.getGameState() == GameState.LOGIN_SCREEN) {
-			loginClickToPlayPassed = false;
+		if (gameStateChanged.getGameState() == GameState.HOPPING) {
+			mouseoverTextDisabled = false;
 		}
 	}
 
