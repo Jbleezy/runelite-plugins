@@ -31,7 +31,7 @@ public class MouseoverTextDisablerPlugin extends Plugin
 	private MouseoverTextDisablerConfig config;
 
 	private boolean mouseoverTextDisabled = false;
-	private boolean loginClickToPlayPassed = false;
+	private boolean loginClickToPlayLoaded = false;
 
 	@Override
 	protected void startUp() throws Exception
@@ -60,19 +60,14 @@ public class MouseoverTextDisablerPlugin extends Plugin
 	@Subscribe
 	public void onGameStateChanged(GameStateChanged gameStateChanged)
 	{
-		if (gameStateChanged.getGameState() == GameState.LOGIN_SCREEN) {
-			mouseoverTextDisabled = false;
-			loginClickToPlayPassed = false;
-		}
-
-		if (gameStateChanged.getGameState() == GameState.HOPPING) {
+		if (gameStateChanged.getGameState() == GameState.LOGIN_SCREEN || gameStateChanged.getGameState() == GameState.HOPPING) {
 			mouseoverTextDisabled = false;
 		}
 	}
 
 	@Subscribe
 	public void onGameTick(net.runelite.api.events.GameTick gameTick) {
-		if (client.getGameState() == GameState.LOGGED_IN && loginClickToPlayPassed) {
+		if (client.getGameState() == GameState.LOGGED_IN && !loginClickToPlayLoaded) {
 			if (!mouseoverTextDisabled) {
 				mouseoverTextDisabled = true;
 				client.runScript(49, "::mouseovertext");
@@ -80,11 +75,18 @@ public class MouseoverTextDisablerPlugin extends Plugin
 		}
 	}
 
-	// doesn't work if client is still on click to play screen
+	// doesn't work if client is on click to play screen
+	@Subscribe
+	public void onWidgetLoaded(net.runelite.api.events.WidgetLoaded widgetLoaded) {
+		if (widgetLoaded.getGroupId() == WidgetID.LOGIN_CLICK_TO_PLAY_GROUP_ID) {
+			loginClickToPlayLoaded = true;
+		}
+	}
+
 	@Subscribe
 	public void onWidgetClosed(net.runelite.api.events.WidgetClosed widgetClosed) {
 		if (widgetClosed.getGroupId() == WidgetID.LOGIN_CLICK_TO_PLAY_GROUP_ID) {
-			loginClickToPlayPassed = true;
+			loginClickToPlayLoaded = false;
 		}
 	}
 
