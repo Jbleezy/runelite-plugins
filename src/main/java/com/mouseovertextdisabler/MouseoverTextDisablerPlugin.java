@@ -88,6 +88,8 @@ public class MouseoverTextDisablerPlugin extends Plugin
 		if (widgetClosed.getGroupId() == WidgetID.LOGIN_CLICK_TO_PLAY_GROUP_ID) {
 			loginClickToPlayLoaded = false;
 		}
+
+		mouseoverTextDisabled = false;
 	}
 
 	@Provides
