@@ -7,7 +7,7 @@ import lombok.extern.slf4j.Slf4j;
 import net.runelite.api.Client;
 import net.runelite.api.GameState;
 import net.runelite.api.events.GameStateChanged;
-import net.runelite.api.widgets.WidgetID;
+import net.runelite.api.gameval.InterfaceID;
 import net.runelite.client.callback.ClientThread;
 import net.runelite.client.config.ConfigManager;
 import net.runelite.client.eventbus.Subscribe;
@@ -78,14 +78,14 @@ public class MouseoverTextDisablerPlugin extends Plugin
 	// doesn't work if client is on click to play screen
 	@Subscribe
 	public void onWidgetLoaded(net.runelite.api.events.WidgetLoaded widgetLoaded) {
-		if (widgetLoaded.getGroupId() == WidgetID.LOGIN_CLICK_TO_PLAY_GROUP_ID) {
+		if (widgetLoaded.getGroupId() == InterfaceID.WELCOME_SCREEN) {
 			loginClickToPlayLoaded = true;
 		}
 	}
 
 	@Subscribe
 	public void onWidgetClosed(net.runelite.api.events.WidgetClosed widgetClosed) {
-		if (widgetClosed.getGroupId() == WidgetID.LOGIN_CLICK_TO_PLAY_GROUP_ID) {
+		if (widgetClosed.getGroupId() == InterfaceID.WELCOME_SCREEN) {
 			loginClickToPlayLoaded = false;
 		}
 
