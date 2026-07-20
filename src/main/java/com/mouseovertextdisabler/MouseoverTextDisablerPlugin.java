@@ -8,6 +8,7 @@ import net.runelite.api.Client;
 import net.runelite.api.GameState;
 import net.runelite.api.events.GameStateChanged;
 import net.runelite.api.gameval.InterfaceID;
+import net.runelite.api.widgets.Widget;
 import net.runelite.client.callback.ClientThread;
 import net.runelite.client.config.ConfigManager;
 import net.runelite.client.eventbus.Subscribe;
@@ -31,17 +32,12 @@ public class MouseoverTextDisablerPlugin extends Plugin
 	private MouseoverTextDisablerConfig config;
 
 	private boolean mouseoverTextDisabled = false;
-	private boolean loginClickToPlayLoaded = false;
 
 	@Override
 	protected void startUp() throws Exception
 	{
 		clientThread.invokeLater(() -> {
-			if (client.getGameState() == GameState.LOGGED_IN && !mouseoverTextDisabled)
-			{
-				mouseoverTextDisabled = true;
-				client.runScript(49, "::mouseovertext");
-			}
+			disableMouseoverText(true);
 		});
 	}
 
@@ -49,47 +45,46 @@ public class MouseoverTextDisablerPlugin extends Plugin
 	protected void shutDown() throws Exception
 	{
 		clientThread.invokeLater(() -> {
-			if (client.getGameState() == GameState.LOGGED_IN && mouseoverTextDisabled)
-			{
-				mouseoverTextDisabled = false;
-				client.runScript(49, "::mouseovertext");
-			}
+			disableMouseoverText(false);
 		});
 	}
 
 	@Subscribe
 	public void onGameStateChanged(GameStateChanged gameStateChanged)
 	{
-		if (gameStateChanged.getGameState() == GameState.LOGIN_SCREEN || gameStateChanged.getGameState() == GameState.HOPPING) {
+		if (gameStateChanged.getGameState() == GameState.LOGGING_IN || gameStateChanged.getGameState() == GameState.HOPPING) {
 			mouseoverTextDisabled = false;
 		}
 	}
 
 	@Subscribe
 	public void onGameTick(net.runelite.api.events.GameTick gameTick) {
-		if (client.getGameState() == GameState.LOGGED_IN && !loginClickToPlayLoaded) {
+		disableMouseoverText(true);
+	}
+
+	public void disableMouseoverText(boolean disable) {
+		if (client.getGameState() != GameState.LOGGED_IN) {
+			return;
+		}
+
+		Widget welcomeScreen = client.getWidget(InterfaceID.WELCOME_SCREEN);
+
+		if  (welcomeScreen != null && !welcomeScreen.isHidden()) {
+			return;
+		}
+
+		if (disable) {
 			if (!mouseoverTextDisabled) {
 				mouseoverTextDisabled = true;
-				client.runScript(49, "::mouseovertext");
+				client.runScript(49, "mouseovertext");
 			}
 		}
-	}
-
-	// doesn't work if client is on click to play screen
-	@Subscribe
-	public void onWidgetLoaded(net.runelite.api.events.WidgetLoaded widgetLoaded) {
-		if (widgetLoaded.getGroupId() == InterfaceID.WELCOME_SCREEN) {
-			loginClickToPlayLoaded = true;
+		else {
+			if (mouseoverTextDisabled) {
+				mouseoverTextDisabled = false;
+				client.runScript(49, "mouseovertext");
+			}
 		}
-	}
-
-	@Subscribe
-	public void onWidgetClosed(net.runelite.api.events.WidgetClosed widgetClosed) {
-		if (widgetClosed.getGroupId() == InterfaceID.WELCOME_SCREEN) {
-			loginClickToPlayLoaded = false;
-		}
-
-		mouseoverTextDisabled = false;
 	}
 
 	@Provides
