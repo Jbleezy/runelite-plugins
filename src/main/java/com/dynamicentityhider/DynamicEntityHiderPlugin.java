@@ -11,6 +11,7 @@ import net.runelite.client.callback.RenderCallbackManager;
 import net.runelite.client.config.ConfigManager;
 import net.runelite.client.eventbus.Subscribe;
 import net.runelite.client.events.ConfigChanged;
+import net.runelite.client.party.PartyService;
 import net.runelite.client.plugins.Plugin;
 import net.runelite.client.plugins.PluginDescriptor;
 
@@ -27,6 +28,9 @@ public class DynamicEntityHiderPlugin extends Plugin
 	private Client client;
 
 	@Inject
+	private PartyService partyService;
+
+	@Inject
 	private RenderCallbackManager renderCallbackManager;
 
 	@Inject
@@ -34,6 +38,8 @@ public class DynamicEntityHiderPlugin extends Plugin
 
 	private long prevTime = System.currentTimeMillis();
 	private List<Player> prevPlayers = new ArrayList<>();
+	private List<Player> prevPlayersAlwaysShown = new ArrayList<>();
+	private List<Player> prevPlayersAlwaysHidden = new ArrayList<>();
 
 	@Provides
 	DynamicEntityHiderConfig provideConfig(ConfigManager configManager)
@@ -84,20 +90,43 @@ public class DynamicEntityHiderPlugin extends Plugin
 
 			if (prevTime != time)
 			{
+				List<WorldView> worldViews = new ArrayList<>();
 				WorldView topLevel = client.getTopLevelWorldView();
-				List<Player> currPlayers = new ArrayList<>(topLevel.players().stream()
-						.map(Player.class::cast)
-						.toList());
+
+				worldViews.add(topLevel);
 
 				for (WorldView worldView : topLevel.worldViews())
 				{
-					for (Player player : worldView.players())
-					{
-						currPlayers.add(player);
-					}
+					worldViews.add(worldView);
 				}
 
-				currPlayers.remove(local);
+				List<Player> currPlayers = new ArrayList<>();
+				List<Player> currPlayersAlwaysShown = new ArrayList<>();
+				List<Player> currPlayersAlwaysHidden = new ArrayList<>();
+
+				for (WorldView worldView : worldViews)
+				{
+					for (Player player : worldView.players())
+					{
+						if (config.hideIgnores() && client.getIgnoreContainer().findByName(player.getName()) != null)
+						{
+							currPlayersAlwaysHidden.add(player);
+						}
+						else if (player == local ||
+								player.getInteracting() == local ||
+								(config.showFriends() && player.isFriend()) ||
+								(config.showFriendsChatMembers() && player.isFriendsChatMember()) ||
+								(config.showClanChatMembers() && player.isClanMember()) ||
+								(config.showPartyMembers() && partyService.isInParty() && partyService.getMemberByDisplayName(player.getName()) != null))
+						{
+							currPlayersAlwaysShown.add(player);
+						}
+						else
+						{
+							currPlayers.add(player);
+						}
+					}
+				}
 
 				int minDistance = config.minDistance();
 				int maxDistance = config.maxDistance();
@@ -126,24 +155,19 @@ public class DynamicEntityHiderPlugin extends Plugin
 
 				prevTime = time;
 				prevPlayers = currPlayers;
+				prevPlayersAlwaysShown = currPlayersAlwaysShown;
+				prevPlayersAlwaysHidden = currPlayersAlwaysHidden;
 			}
 
-			List<Player> players = prevPlayers;
+			List<Player> players = new ArrayList<>(prevPlayers);
+			players.addAll(prevPlayersAlwaysShown);
+			players.removeAll(prevPlayersAlwaysHidden);
 
 			if (renderable instanceof Player)
 			{
 				Player player = (Player) renderable;
 
-				if (player != local)
-				{
-					// always show players attacking self
-					if (player.getInteracting() == local)
-					{
-						return true;
-					}
-
-					return players.contains(player);
-				}
+				return players.contains(player);
 			}
 			else if (renderable instanceof NPC)
 			{
