@@ -92,9 +92,18 @@ public class DynamicEntityHiderPlugin extends Plugin
 
 			if (prevTime != time)
 			{
-				List<Player> currPlayers = new ArrayList<>(client.getTopLevelWorldView().players().stream()
+				WorldView topLevel = client.getTopLevelWorldView();
+				List<Player> currPlayers = new ArrayList<>(topLevel.players().stream()
 						.map(Player.class::cast)
 						.toList());
+
+				for (WorldView worldView : topLevel.worldViews())
+				{
+					for (Player player : worldView.players())
+					{
+						currPlayers.add(player);
+					}
+				}
 
 				currPlayers.remove(local);
 
@@ -155,6 +164,24 @@ public class DynamicEntityHiderPlugin extends Plugin
 					if (interacting instanceof Player)
 					{
 						return players.contains((Player) interacting);
+					}
+				}
+			}
+			else if (renderable instanceof Scene)
+			{
+				Scene scene = (Scene) renderable;
+				WorldEntity worldEntity = client.getTopLevelWorldView().worldEntities().byIndex(scene.getWorldViewId());
+
+				if (worldEntity.getOwnerType() == WorldEntity.OWNER_TYPE_OTHER_PLAYER)
+				{
+					WorldView worldView = worldEntity.getWorldView();
+
+					for (Player player : worldView.players())
+					{
+						if (!players.contains(player))
+						{
+							return false;
+						}
 					}
 				}
 			}
