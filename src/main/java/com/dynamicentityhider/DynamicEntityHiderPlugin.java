@@ -98,13 +98,15 @@ public class DynamicEntityHiderPlugin extends Plugin
 
 				currPlayers.remove(local);
 
-				if (config.mode() == Mode.DISTANCE)
+				Mode mode = config.mode();
+
+				if (mode == Mode.DISTANCE)
 				{
 					currPlayers.sort((a, b) -> {
 						return client.getLocalPlayer().getLocalLocation().distanceTo(a.getLocalLocation()) - client.getLocalPlayer().getLocalLocation().distanceTo(b.getLocalLocation());
 					});
 				}
-				else if (config.mode() == Mode.RANDOM)
+				else if (mode == Mode.RANDOM)
 				{
 					List<Player> newPlayers = new ArrayList<>(currPlayers);
 					newPlayers.removeAll(prevPlayers);
@@ -115,7 +117,11 @@ public class DynamicEntityHiderPlugin extends Plugin
 					currPlayers.addAll(newPlayers);
 				}
 
-				currPlayers.subList(config.maxPlayersShown(), currPlayers.size()).clear();
+				int maxPlayersShown = config.maxPlayersShown();
+
+				if (maxPlayersShown < currPlayers.size()) {
+					currPlayers.subList(maxPlayersShown, currPlayers.size()).clear();
+				}
 
 				prevTime = time;
 				prevPlayers = currPlayers;
