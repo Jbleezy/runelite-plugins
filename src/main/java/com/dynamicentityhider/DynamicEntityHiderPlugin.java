@@ -177,6 +177,11 @@ public class DynamicEntityHiderPlugin extends Plugin
 				{
 					Actor interacting = npc.getInteracting();
 
+					if (interacting == null)
+					{
+						return false;
+					}
+
 					if (interacting instanceof Player)
 					{
 						Player player = (Player) interacting;
