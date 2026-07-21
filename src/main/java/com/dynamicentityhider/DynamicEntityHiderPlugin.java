@@ -135,6 +135,12 @@ public class DynamicEntityHiderPlugin extends Plugin
 
 				if (player != local)
 				{
+					// always show players attacking self
+					if (player.getInteracting() == local)
+					{
+						return true;
+					}
+
 					return players.contains(player);
 				}
 			}
