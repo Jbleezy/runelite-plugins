@@ -1,6 +1,5 @@
 package com.dynamicentityhider;
 
-import com.dynamicentityhider.config.Mode;
 import net.runelite.client.config.Config;
 import net.runelite.client.config.ConfigGroup;
 import net.runelite.client.config.ConfigItem;
@@ -17,31 +16,50 @@ public interface DynamicEntityHiderConfig extends Config
 	)
 	@ConfigItem(
 			position = 1,
-			keyName = "maxPlayersShown",
-			name = "Max Players Shown",
+			keyName = "maxPlayers",
+			name = "Max players",
 			description = "Maximum amount of other players to show"
 	)
-	default int maxPlayersShown()
+	default int maxPlayers()
 	{
 		return 100;
 	}
 
+	@Range(
+			min = 0,
+			max = 15
+	)
 	@ConfigItem(
 			position = 2,
-			keyName = "mode",
-			name = "Mode",
-			description = "Determines how to hide other players"
+			keyName = "minDistance",
+			name = "Min distance",
+			description = "Minimum tile distance to show other players"
 	)
-	default Mode mode()
+	default int minDistance()
 	{
-		return Mode.RANDOM;
+		return 0;
+	}
+
+	@Range(
+			min = 0,
+			max = 15
+	)
+	@ConfigItem(
+			position = 3,
+			keyName = "maxDistance",
+			name = "Max distance",
+			description = "Maximum tile distance to show other players"
+	)
+	default int maxDistance()
+	{
+		return 15;
 	}
 
 	@ConfigItem(
-			position = 3,
+			position = 4,
 			keyName = "disableInWilderness",
-			name = "Disable In Wilderness",
-			description = "Disables hiding other players in the Wilderness"
+			name = "Disable in Wilderness",
+			description = "Disable hiding other players in the Wilderness"
 	)
 	default boolean disableInWilderness() { return false; }
 }

@@ -1,10 +1,10 @@
 package com.dynamicentityhider;
 
-import com.dynamicentityhider.config.Mode;
 import com.google.inject.Provides;
 import javax.inject.Inject;
 import lombok.extern.slf4j.Slf4j;
 import net.runelite.api.*;
+import net.runelite.api.coords.WorldPoint;
 import net.runelite.api.gameval.VarbitID;
 import net.runelite.client.callback.RenderCallback;
 import net.runelite.client.callback.RenderCallbackManager;
@@ -27,10 +27,10 @@ public class DynamicEntityHiderPlugin extends Plugin
 	private Client client;
 
 	@Inject
-	private DynamicEntityHiderConfig config;
+	private RenderCallbackManager renderCallbackManager;
 
 	@Inject
-	private RenderCallbackManager renderCallbackManager;
+	private DynamicEntityHiderConfig config;
 
 	private long prevTime = System.currentTimeMillis();
 	private List<Player> prevPlayers = new ArrayList<>();
@@ -61,14 +61,6 @@ public class DynamicEntityHiderPlugin extends Plugin
 		if (!Objects.equals(configChanged.getGroup(), DynamicEntityHiderConfig.GROUP))
 		{
 			return;
-		}
-
-		if (Objects.equals(configChanged.getKey(), "mode"))
-		{
-			if (Objects.equals(configChanged.getNewValue(), Mode.RANDOM.name()))
-			{
-				prevPlayers = new ArrayList<>(); // re-randomize players
-			}
 		}
 	}
 
@@ -107,29 +99,29 @@ public class DynamicEntityHiderPlugin extends Plugin
 
 				currPlayers.remove(local);
 
-				Mode mode = config.mode();
+				int minDistance = config.minDistance();
+				int maxDistance = config.maxDistance();
+				WorldPoint clientWorldPoint = local.getWorldLocation();
 
-				if (mode == Mode.DISTANCE)
-				{
-					currPlayers.sort((a, b) -> {
-						return client.getLocalPlayer().getLocalLocation().distanceTo(a.getLocalLocation()) - client.getLocalPlayer().getLocalLocation().distanceTo(b.getLocalLocation());
-					});
-				}
-				else if (mode == Mode.RANDOM)
-				{
-					List<Player> newPlayers = new ArrayList<>(currPlayers);
-					newPlayers.removeAll(prevPlayers);
+				currPlayers.removeIf(player -> {
+					WorldPoint playerWorldPoint = player.getWorldLocation();
+					int distance = clientWorldPoint.distanceTo(playerWorldPoint);
 
-					Collections.shuffle(newPlayers);
+					return distance < minDistance || distance > maxDistance;
+				});
 
-					currPlayers.retainAll(prevPlayers);
-					currPlayers.addAll(newPlayers);
-				}
+				List<Player> newPlayers = new ArrayList<>(currPlayers);
+				newPlayers.removeAll(prevPlayers);
 
-				int maxPlayersShown = config.maxPlayersShown();
+				Collections.shuffle(newPlayers);
 
-				if (maxPlayersShown < currPlayers.size()) {
-					currPlayers.subList(maxPlayersShown, currPlayers.size()).clear();
+				currPlayers.retainAll(prevPlayers);
+				currPlayers.addAll(newPlayers);
+
+				int maxPlayers = config.maxPlayers();
+
+				if (maxPlayers < currPlayers.size()) {
+					currPlayers.subList(maxPlayers, currPlayers.size()).clear();
 				}
 
 				prevTime = time;
@@ -163,7 +155,9 @@ public class DynamicEntityHiderPlugin extends Plugin
 
 					if (interacting instanceof Player)
 					{
-						return players.contains((Player) interacting);
+						Player player = (Player) interacting;
+
+						return players.contains(player);
 					}
 				}
 			}
