@@ -15,7 +15,6 @@ import net.runelite.client.plugins.Plugin;
 import net.runelite.client.plugins.PluginDescriptor;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
 @Slf4j
 @PluginDescriptor(
@@ -34,8 +33,7 @@ public class DynamicEntityHiderPlugin extends Plugin
 	private RenderCallbackManager renderCallbackManager;
 
 	private long prevTime = System.currentTimeMillis();
-	private List<Player> playersToShow = new ArrayList<>();
-	private List<Player> prevPlayersToShow = new ArrayList<>();
+	private List<Player> prevPlayers = new ArrayList<>();
 
 	@Provides
 	DynamicEntityHiderConfig provideConfig(ConfigManager configManager)
@@ -46,7 +44,7 @@ public class DynamicEntityHiderPlugin extends Plugin
 	@Override
 	protected void startUp()
 	{
-		playersToShow = new ArrayList<>(); // re-randomize players
+		prevPlayers = new ArrayList<>(); // re-randomize players
 
 		renderCallbackManager.register(drawListener);
 	}
@@ -58,13 +56,18 @@ public class DynamicEntityHiderPlugin extends Plugin
 	}
 
 	@Subscribe
-	public void onConfigChanged(ConfigChanged e)
+	public void onConfigChanged(ConfigChanged configChanged)
 	{
-		if (e.getGroup().equals(DynamicEntityHiderConfig.GROUP))
+		if (!Objects.equals(configChanged.getGroup(), DynamicEntityHiderConfig.GROUP))
 		{
-			if (Objects.equals(e.getNewValue(), Mode.RANDOM.toString()))
+			return;
+		}
+
+		if (Objects.equals(configChanged.getKey(), "mode"))
+		{
+			if (Objects.equals(configChanged.getNewValue(), Mode.RANDOM.name()))
 			{
-				playersToShow = new ArrayList<>(); // re-randomize players
+				prevPlayers = new ArrayList<>(); // re-randomize players
 			}
 		}
 	}
@@ -85,40 +88,40 @@ public class DynamicEntityHiderPlugin extends Plugin
 			}
 
 			Player local = client.getLocalPlayer();
+			long time = System.currentTimeMillis();
 
-			if (prevTime != System.currentTimeMillis())
+			if (prevTime != time)
 			{
-				prevTime = System.currentTimeMillis();
-				prevPlayersToShow = new ArrayList<>(playersToShow);
+				List<Player> currPlayers = new ArrayList<>(client.getTopLevelWorldView().players().stream()
+						.map(Player.class::cast)
+						.toList());
 
-				playersToShow = client.getTopLevelWorldView().players().stream()
-						.map(p -> (Player) p)
-						.collect(Collectors.toCollection(ArrayList::new));
+				currPlayers.remove(local);
 
-				playersToShow.remove(local);
-
-				if (config.mode().equals(Mode.DISTANCE))
+				if (config.mode() == Mode.DISTANCE)
 				{
-					playersToShow.sort(new SortByDistance());
+					currPlayers.sort((a, b) -> {
+						return client.getLocalPlayer().getLocalLocation().distanceTo(a.getLocalLocation()) - client.getLocalPlayer().getLocalLocation().distanceTo(b.getLocalLocation());
+					});
 				}
-				else if (config.mode().equals(Mode.RANDOM))
+				else if (config.mode() == Mode.RANDOM)
 				{
-					List<Player> retainPlayersToShow = new ArrayList<>(playersToShow);
-					retainPlayersToShow.retainAll(prevPlayersToShow);
+					List<Player> newPlayers = new ArrayList<>(currPlayers);
+					newPlayers.removeAll(prevPlayers);
 
-					List<Player> newPlayersToShow = new ArrayList<>(playersToShow);
-					newPlayersToShow.removeAll(retainPlayersToShow);
-					Collections.shuffle(newPlayersToShow);
+					Collections.shuffle(newPlayers);
 
-					playersToShow = new ArrayList<>(retainPlayersToShow);
-					playersToShow.addAll(newPlayersToShow);
+					currPlayers.retainAll(prevPlayers);
+					currPlayers.addAll(newPlayers);
 				}
 
-				if (config.maxPlayersShown() < playersToShow.size())
-				{
-					playersToShow = playersToShow.subList(0, config.maxPlayersShown());
-				}
+				currPlayers.subList(config.maxPlayersShown(), currPlayers.size()).clear();
+
+				prevTime = time;
+				prevPlayers = currPlayers;
 			}
+
+			List<Player> players = prevPlayers;
 
 			if (renderable instanceof Player)
 			{
@@ -126,7 +129,7 @@ public class DynamicEntityHiderPlugin extends Plugin
 
 				if (player != local)
 				{
-					return playersToShow.contains(player);
+					return players.contains(player);
 				}
 			}
 			else if (renderable instanceof NPC)
@@ -139,7 +142,7 @@ public class DynamicEntityHiderPlugin extends Plugin
 
 					if (interacting instanceof Player)
 					{
-						return playersToShow.contains((Player) interacting);
+						return players.contains((Player) interacting);
 					}
 				}
 			}
@@ -147,12 +150,4 @@ public class DynamicEntityHiderPlugin extends Plugin
 			return true;
 		}
 	};
-
-	class SortByDistance implements Comparator<Player>
-	{
-		public int compare(Player a, Player b)
-		{
-			return client.getLocalPlayer().getLocalLocation().distanceTo(a.getLocalLocation()) - client.getLocalPlayer().getLocalLocation().distanceTo(b.getLocalLocation());
-		}
-	}
 }
