@@ -6,11 +6,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import net.runelite.api.Client;
 import net.runelite.api.GameState;
-import net.runelite.api.ScriptID;
-import net.runelite.api.events.GameStateChanged;
-import net.runelite.api.events.ScriptPostFired;
-import net.runelite.api.gameval.InterfaceID;
-import net.runelite.api.widgets.Widget;
+import net.runelite.api.events.PostClientTick;
 import net.runelite.client.callback.ClientThread;
 import net.runelite.client.config.ConfigManager;
 import net.runelite.client.eventbus.Subscribe;
@@ -33,8 +29,6 @@ public class MouseoverTextDisablerPlugin extends Plugin
 	@Inject
 	private MouseoverTextDisablerConfig config;
 
-	private boolean mouseoverTextDisabled = false;
-
 	@Override
 	protected void startUp() throws Exception
 	{
@@ -52,23 +46,9 @@ public class MouseoverTextDisablerPlugin extends Plugin
 	}
 
 	@Subscribe
-	public void onGameStateChanged(GameStateChanged gameStateChanged)
+	public void onPostClientTick(PostClientTick postClientTick)
 	{
-		if (gameStateChanged.getGameState() == GameState.LOGGING_IN || gameStateChanged.getGameState() == GameState.HOPPING) {
-			mouseoverTextDisabled = false;
-		}
-	}
-
-	@Subscribe
-	public void onGameTick(net.runelite.api.events.GameTick gameTick) {
 		disableMouseoverText(true);
-	}
-
-	@Subscribe
-	public void onScriptPostFired(ScriptPostFired event) {
-		if (event.getScriptId() == ScriptID.TOPLEVEL_REDRAW) {
-			mouseoverTextDisabled = false;
-		}
 	}
 
 	public void disableMouseoverText(boolean disable) {
@@ -76,22 +56,14 @@ public class MouseoverTextDisablerPlugin extends Plugin
 			return;
 		}
 
-		Widget welcomeScreen = client.getWidget(InterfaceID.WELCOME_SCREEN);
-
-		if  (welcomeScreen != null && !welcomeScreen.isHidden()) {
-			return;
-		}
-
 		if (disable) {
-			if (!mouseoverTextDisabled) {
-				mouseoverTextDisabled = true;
-				client.runScript(49, "mouseovertext");
+			if (client.isMouseoverTextEnabled()) {
+				client.setMouseoverTextEnabled(false);
 			}
 		}
 		else {
-			if (mouseoverTextDisabled) {
-				mouseoverTextDisabled = false;
-				client.runScript(49, "mouseovertext");
+			if (!client.isMouseoverTextEnabled()) {
+				client.setMouseoverTextEnabled(true);
 			}
 		}
 	}
