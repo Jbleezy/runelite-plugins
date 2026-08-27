@@ -207,11 +207,13 @@ public class DynamicEntityHiderPlugin extends Plugin
 
 					for (Player player : worldView.players())
 					{
-						if (!players.contains(player))
+						if (players.contains(player))
 						{
-							return false;
+							return true;
 						}
 					}
+
+					return false;
 				}
 			}
 
