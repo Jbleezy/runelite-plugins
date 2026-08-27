@@ -133,6 +133,11 @@ public class DynamicEntityHiderPlugin extends Plugin
 				WorldPoint clientWorldPoint = local.getWorldLocation();
 
 				currPlayers.removeIf(player -> {
+					if (!local.getWorldView().isTopLevel() || !player.getWorldView().isTopLevel())
+					{
+						return false;
+					}
+
 					WorldPoint playerWorldPoint = player.getWorldLocation();
 					int distance = clientWorldPoint.distanceTo(playerWorldPoint);
 
@@ -149,7 +154,8 @@ public class DynamicEntityHiderPlugin extends Plugin
 
 				int maxPlayers = config.maxPlayers();
 
-				if (maxPlayers < currPlayers.size()) {
+				if (maxPlayers < currPlayers.size())
+				{
 					currPlayers.subList(maxPlayers, currPlayers.size()).clear();
 				}
 
